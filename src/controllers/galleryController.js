@@ -1,5 +1,5 @@
 const Gallery = require ('../models/Gallery')
-
+const Cloudinary = require('../config/cloudinary')
 
 exports.getAllMedia = async (req, res) => {
     try {
@@ -91,13 +91,32 @@ exports.uploadMedia = async (req, res) => {
     }
 };
 
-exports.deleteMedia = async( req, res ) =>{
+exports.deleteMedia = async (req, res) => {
     try {
+        const gallery = await Gallery.findById(req.params.id);
         
+        if (!gallery) {
+            return res.status(404).json({ message: 'Media not found' });
+        }
+
+        // Delete from Cloudinary
+        if (gallery.coverImage && gallery.coverImage.public_id) {
+            await cloudinary.uploader.destroy(gallery.coverImage.public_id);
+        }
+
+        if (gallery.video && gallery.video.public_id) {
+            await cloudinary.uploader.destroy(gallery.video.public_id, { resource_type: 'video' });
+        }
+
+        // Delete from database
+        await Gallery.findByIdAndDelete(req.params.id);
+
+        res.status(200).json({ message: 'Media deleted successfully' });
+
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-}
+};
 
 exports.updateCaption = async( req, res ) =>{
     try {

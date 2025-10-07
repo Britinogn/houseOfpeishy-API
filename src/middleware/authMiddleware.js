@@ -19,7 +19,7 @@ module.exports = async (req, res, next) => {
 
         const admin = await Admin.findById(decoded.id);
         if (!admin) {
-            return res.status(401).json({ message: 'User no longer exists.' });
+            return res.status(401).json({ message: 'Admin no longer exists.' });
         }
 
         req.user = decoded;

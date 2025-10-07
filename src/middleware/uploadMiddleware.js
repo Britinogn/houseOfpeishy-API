@@ -26,7 +26,7 @@ const galleryStorage = new CloudinaryStorage({
                 : ['jpg', 'jpeg', 'png', 'webp'],
             resource_type: isVideo ? 'video' : 'image',
             transformation: isVideo 
-                ? [{quality: 'auto', fetch_format: 'mp4'}] 
+                ? [{quality: 'auto'}] 
                 : [{width: 1200, height: 1200, crop: 'limit'}]
         };
     }

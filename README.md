@@ -14,3 +14,5 @@ npm run start
 - Next: add a health-check endpoint, add basic tests, and verify auth middleware behavior.
 
 Implement appointment management features, including creation, retrieval, and status updates; enhance authentication with JWT; add media upload functionality; and integrate SMS notifications.
+
+Add moment.js dependency and implement admin dashboard with statistics endpoints

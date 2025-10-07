@@ -225,8 +225,6 @@ exports.updateStatus = async(req, res) => {
 }
 
 
-
-
 exports.sendReminder = async(req, res) => {
     try {
         const { id } = req.params;
@@ -270,16 +268,6 @@ exports.sendReminder = async(req, res) => {
 }
 
 
-
-
-
-
-
-
-
-
-
-
 exports.getAppointmentById = async( req, res ) =>{
     try {
         
@@ -298,7 +286,19 @@ exports.getAppointmentById = async( req, res ) =>{
 
 exports.deleteAppointment = async( req, res ) =>{
     try {
-        
+        const { id } = req.params;
+
+        const appointment = await Appointment.findByIdAndDelete(id);
+
+        if (!appointment) {
+            return res.status(404).json({ 
+                message: 'Appointment schedule not found' 
+            });
+        }
+
+        res.status(200).json({ 
+            message: `Appointment has been deleted successfully` 
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

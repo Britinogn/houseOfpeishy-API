@@ -15,6 +15,7 @@ const paymentRoutes = require('./routes/paymentRoute');
 const galleryRoutes = require('./routes/galleryRoute');
 const availabilityRoutes = require('./routes/availabilityRoute');
 
+const adminDashboardRoute = require('./routes/adminDashboardRoute')
 
 //connectDB 
 connectDB();
@@ -33,6 +34,8 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/availability', availabilityRoutes);
+
+app.use('/api/admin/dashboard', adminDashboardRoute );
 
 
 

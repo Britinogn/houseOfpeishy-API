@@ -7,6 +7,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 router.post('/register', authController.register);  // Create first admin
 router.post('/login', authController.login);
 
+//admin-login
 // Protected routes (require authentication)
 //router.post('/logout', authMiddleware, authController.logout);
 router.get('/profile', authMiddleware, authController.getProfile);
