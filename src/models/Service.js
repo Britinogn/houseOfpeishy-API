@@ -4,7 +4,7 @@ const serviceSchema = new mongoose.Schema({
     name: {type: String, required: true,  trim: true},
     description: {type: String, required: true},
     category:  {type: String, required: true,
-        enum: ['Beauty Treatment', 'Hair Styling', 'Wig Making', 'Hair Sales'],  // Restricts to my 4 categories
+        enum: ['Beauty Treatment', 'Hair Styling', 'Braid Style', 'Wig Making', 'Hair Sales'],  // Restricts to my 4 categories
     },
     price: {type: Number, required: true , min: 0},
     coverImage:   {url: String, public_id: String},

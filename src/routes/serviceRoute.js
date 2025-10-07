@@ -9,6 +9,7 @@ router.get('/', serviceController.getAllServices);  // Get all active services
 router.get('/:id', serviceController.getServiceById);  // Get single service
 router.get('/category/:category', serviceController.getServicesByCategory);  // Filter by category
 
+
 // Protected routes (admin only)
 router.post('/', authMiddleware, uploadService.single('coverImage'), serviceController.createService);
 router.put('/:id', authMiddleware, uploadService.single('coverImage'), serviceController.updateService);

@@ -3,9 +3,9 @@ const mongoose = require('mongoose');
 const appointmentSchema = new mongoose.Schema({
     serviceId:{ type: mongoose.Schema.Types.ObjectId, ref: 'Service', required: true },
     
-    clientName:{type: String , required: true, trim: true},
-    clientPhone: {type: String, required: true, trim: true},
-    clientEmail:{type: String , required:  true, lowercase: true, trim: true },
+    customerName:{type: String , required: true, trim: true},
+    customerPhone: {type: String, required: true, trim: true},
+    customerEmail:{type: String , required:  true, lowercase: true, trim: true },
     
     appointmentDate:{type: Date , required: true},
     appointmentTime: {type: String , required: true},

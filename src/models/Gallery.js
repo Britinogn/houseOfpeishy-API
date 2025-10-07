@@ -20,7 +20,7 @@ const gallerySchema = new mongoose.Schema({
     category: {
         type: String, 
         required: true,
-        enum: ['Beauty Salon', 'Hair Styling', 'Wig Making', 'Hair Sales', 'Before & After']
+        enum: ['Beauty Salon', 'Hair Styling', 'Braid Style', 'Wig Making', 'Hair Sales', 'Before & After']
     }
 }, {timestamps: true});
 
