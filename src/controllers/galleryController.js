@@ -21,24 +21,6 @@ exports.getAllMedia = async (req, res) => {
     }
 };
 
-exports.getMediaByCategory = async( req, res ) =>{
-    try {
-        
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-}
-
-
-exports.getMediaById = async( req, res ) =>{
-    try {
-        
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-}
-
-
 exports.uploadMedia = async (req, res) => {
     try {
         const { category, caption } = req.body;
@@ -118,7 +100,24 @@ exports.deleteMedia = async (req, res) => {
     }
 };
 
+exports.getMediaById = async( req, res ) =>{
+    try {
+        
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+
 exports.updateCaption = async( req, res ) =>{
+    try {
+        
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+exports.getMediaByCategory = async( req, res ) =>{
     try {
         
     } catch (error) {

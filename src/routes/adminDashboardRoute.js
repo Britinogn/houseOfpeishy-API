@@ -5,6 +5,6 @@ const adminDashboardController = require('../controllers/adminDashboardControlle
 const authMiddleware = require('../middleware/authMiddleware');
 
 // Get overall dashboard stats (Admin only)
-router.get('/stats', authMiddleware, adminDashboardController.getDashboardStats);
+router.get('/dashboard', authMiddleware, adminDashboardController.getDashboardStats);
 
 module.exports = router;

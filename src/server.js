@@ -35,7 +35,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/availability', availabilityRoutes);
 
-app.use('/api/admin/dashboard', adminDashboardRoute );
+app.use('/api/admin', adminDashboardRoute );
 
 
 
@@ -49,3 +49,11 @@ app.use((req, res) => {
     res.status(404).json({ message: 'Route not found' });
 });
 app.listen(PORT, () => console.log( ` 🚀 Server running on port ${PORT}`));
+
+
+
+
+
+
+
+

@@ -147,6 +147,7 @@ exports.getAllAppointments = async(req, res) => {
     }
 }
 
+
 exports.updateStatus = async(req, res) => {
     try {
         const { id } = req.params;

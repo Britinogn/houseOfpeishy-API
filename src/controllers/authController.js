@@ -6,12 +6,12 @@ const jwt = require('jsonwebtoken')
 
 exports.register = async( req, res ) =>{
     try {
-        const {username , email , password, role = 'owner'} = req.body;
+        const {username , email , password, role = 'admin'} = req.body;
         if (!username || !email || !password) {
             return res.status(400).json({message: 'All fields are required'})
         }
 
-        if (!['owner' ,'manager' ,'receptionist', 'stylist'].includes(role) ){
+        if (!['admin' ,'manager' ,'receptionist', 'stylist'].includes(role) ){
             return res.status(400).json({message: 'Invalid role'})
         }
 
@@ -76,7 +76,7 @@ exports.login = async( req, res ) =>{
 
 
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: 'Invalid credentials. Please try again.', error });
     }
 }
 

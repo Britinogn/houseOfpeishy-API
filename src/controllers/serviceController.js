@@ -10,7 +10,7 @@ exports.getAllServices = async(req, res) => {
         const totalPages = Math.ceil(totalDocuments / limit);
         
         const services = await Service.find()
-            //.populate('owner', 'username')
+            //.populate('admin', 'username')
             .sort({ createdAt: -1 })
             .skip(Number(skip))
             .limit(Number(limit));
