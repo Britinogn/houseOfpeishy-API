@@ -5,7 +5,7 @@ const { sendEmail , emailTemplates } = require('../utils/emailService');
 // sendEmail
 exports.createAppointment = async (req, res) => {
     try {
-        const { serviceId, appointmentDate, appointmentTime, customerName, customerEmail, customerPhone, notes , emailSent  } = req.body;
+        const { serviceId, appointmentDate, appointmentTime, customerName, customerEmail, customerPhone, notes} = req.body;
 
         if (!serviceId || !appointmentDate || !appointmentTime || !customerName || !customerEmail || !customerPhone) {
             return res.status(400).json({ message: 'All required fields must be provided' });
@@ -21,6 +21,7 @@ exports.createAppointment = async (req, res) => {
             appointmentTime,
             status: { $in: ['pending', 'confirmed'] }
         });
+
         if (existingAppointment) return res.status(400).json({ message: 'Time slot already booked' });
 
         const appointment = new Appointment({
@@ -33,26 +34,43 @@ exports.createAppointment = async (req, res) => {
             notes
         });
 
-        await appointment.save();
+        try {
+            const message = emailTemplates.booking(
+                appointment.customerName,
+                appointment.serviceId.name,
+                new Date(appointment.appointmentDate).toDateString(),
+                appointment.appointmentTime
+            );
 
-        // --- Send booking SMS ---
-        const formattedDate = new Date(appointmentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        const bookingMessage = emailTemplates.booking(customerName, service.name, formattedDate, appointmentTime);
+            const emailResult = await sendEmail(
+                appointment.customerEmail,
+                "Your Appointment Booking Confirmation 💅",
+                message
+            );
 
-        const notificationResult = await sendEmail(customerPhone, bookingMessage, 'sms');
-        if (notificationResult.success) {
-            appointment.emailSent.booking = true;
-            await appointment.save();
+            // Update appointment if email succeeded
+            if (emailResult.success) {
+                appointment.emailSent.booking = true;
+                await appointment.save();
+                console.log("✅ Booking email sent successfully");
+            } else {
+                console.warn("⚠️ Failed to send booking email:", emailResult.error);
+            }
+        } catch (err) {
+            console.error("❌ Error sending booking email:", err);
         }
 
-        await appointment.populate('serviceId', 'name price category duration');
+
+        await appointment.save();
+        await appointment.populate("serviceId", "name price category duration");
 
         res.status(201).json({
-            message: 'Appointment created successfully',
+            message: "Appointment created successfully",
             appointment,
-            emailSent: notificationResult.success
+            emailSent: appointment.emailSent.booking,
         });
     } catch (error) {
+        console.error("❌ Appointment creation error:", error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -176,7 +194,7 @@ exports.updateStatus = async (req, res) => {
       day: 'numeric'
     });
 
-    let smsResult = { success: false };
+    let emailResult = { success: false };
 
     //  Send SMS based on status change
     if (status === 'confirmed' && oldStatus === 'pending') {
@@ -186,8 +204,8 @@ exports.updateStatus = async (req, res) => {
         formattedDate,
         appointment.appointmentTime
       );
-      smsResult = await sendEmail(appointment.customerPhone, message, 'sms');
-      if (smsResult.success) appointment.emailSent.confirmation = true;
+      emailResult = await sendEmail(appointment.customerEmail, message, 'email');
+      if (emailResult.success) appointment.emailSent.confirmation = true;
     }
 
     if (status === 'cancelled') {
@@ -197,8 +215,8 @@ exports.updateStatus = async (req, res) => {
         formattedDate,
         appointment.appointmentTime
       );
-      smsResult = await sendEmail(appointment.customerPhone, message, 'sms');
-      if (smsResult.success) appointment.emailSent.cancellation = true;
+      emailResult = await sendEmail(appointment.customerEmail, message, 'email');
+      if (emailResult.success) appointment.emailSent.cancellation = true;
     }
 
     //  Save updates
@@ -208,7 +226,7 @@ exports.updateStatus = async (req, res) => {
     res.json({
       message: `Appointment status updated to ${status}`,
       appointment,
-      emailSent: smsResult.success
+      emailSent: emailResult.success
     });
   } catch (error) {
     console.error('❌ Error updating appointment status:', error.message);
@@ -243,16 +261,16 @@ exports.sendReminder = async(req, res) => {
             appointment.appointmentTime
         );
         
-        const smsResult = await sendEmail(appointment.customerPhone, message);
+        const emailResult = await sendEmail(appointment.customerEmail, message);
         
-        if (smsResult.success) {
+        if (emailResult.success) {
             appointment.emailSent.reminder = true;
             await appointment.save();
         }
         
         res.json({
             message: 'Reminder sent successfully',
-            emailSent: smsResult.success
+            emailSent: emailResult.success
         });
         
     } catch (error) {

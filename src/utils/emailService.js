@@ -1,57 +1,50 @@
-import nodemailer from "nodemailer";
-import dotenv from "dotenv";
-dotenv.config();
+//require("dotenv").config();
+const nodemailer = require("nodemailer");
 
-// Create transporter using SMTP (cPanel)
+//  Create transporter using cPanel SMTP
 const transporter = nodemailer.createTransport({
-  host: process.env.CPANEL_MAIL_HOST ,
-  port: Number(process.env.CPANEL_MAIL_PORT),
-  secure: true, // true for 465, false for other ports
+  service: "gmail",
   auth: {
-    user: process.env.CPANEL_MAIL_USER,
-    pass: process.env.CPANEL_MAIL_PASS // your email password
-  }
+    user: process.env.EMAIL_USER, // stored in .env
+    pass: process.env.EMAIL_PASS // stored in .env
+  },
+
 });
 
-// Verify connection configuration
-transporter.verify(function (error, success) {
-  if (error) {
-    console.error("❌ Email transporter error:", error);
-  } else {
-    console.log("✅ Email transporter is ready");
-  }
-});
-
-// Helper function to send email
-export const sendEmail = async (to, subject, message) => {
+//  Helper function to send email
+const sendEmail = async (to, subject, message) => {
   try {
     const info = await transporter.sendMail({
-      from: `"House of Peishy" <houseofpeishy@aduvieevents.com>`, // sender
-      to,       // recipient email
-      subject,  // email subject
-      text: message,       // plain text body
-      html: `<p>${message}</p>` // HTML body
+      from: `"House of Peishy" <${process.env.EMAIL_USER}>`, // from .env
+      to, // recipient
+      subject,
+      text: message,
+      html: `<p>${message}</p>`
     });
 
-    console.log("✅ Email sent:", info.messageId);
+    console.log(`✅ Email sent successfully: ${info.messageId}`);
     return { success: true, data: info };
   } catch (error) {
-    console.error("❌ Email sending error:", error);
+    console.error("❌ Email sending failed:", error.message);
     return { success: false, error };
   }
 };
 
-// Email Templates
-export const emailTemplates = {
-  booking: (customerName, service, date, time) =>
-    `Hi ${customerName}, your ${service} appointment has been booked for ${date} at ${time}. We'll confirm shortly 💅`,
+// ✅ Email Templates
+const emailTemplates = {
+  booking: (customerName, service, serviceId,  date) =>
+    `Hi ${customerName}, your ${serviceId} appointment has been booked for ${date}. We'll confirm shortly 💅`,
 
-  confirmation: (customerName, service, date, time) =>
-    `Hi ${customerName}, your ${service} appointment is confirmed for ${date} at ${time}. We can’t wait to see you! 💖`,
+  confirmation: (customerName, serviceId, date) =>
+    `Hi ${customerName}, your ${serviceId} appointment is confirmed for ${date} . We can’t wait to see you! 💖`,
 
-  reminder: (customerName, service, date, time) =>
-    `Reminder 💫: Your ${service} appointment is tomorrow at ${time}. Please reply to confirm or reschedule.`,
+  reminder: (customerName, serviceId, date) =>
+    `Reminder 💫: Your ${serviceId} appointment is tomorrow at ${date}. Please reply to confirm or reschedule.`,
 
-  cancellation: (customerName, service, date, time) =>
-    `Hi ${customerName}, your ${service} appointment on ${date} at ${time} has been cancelled. You can book again anytime.`
+  cancellation: (customerName, serviceId, date, time) =>
+    `Hi ${customerName}, your ${serviceId} appointment on ${date} at ${time} has been cancelled. You can book again anytime.`
 };
+
+// ✅ Export for reuse or standalone test
+module.exports = { sendEmail, emailTemplates, transporter };
+
