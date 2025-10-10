@@ -13,10 +13,11 @@ const appointmentSchema = new mongoose.Schema({
     status: { type: String, enum: ['pending', 'confirmed', 'completed', 'cancelled'], default: 'pending' },
 
     notes: { type: String, trim: true },
-    smsSent: {
+    emailSent: {
         booking: {type: Boolean, default: false},
         confirmation: {type: Boolean, default: false},
-        reminder: {type: Boolean, default: false}
+        reminder: {type: Boolean, default: false},
+        cancellation: { type: Boolean, default: false }
     }
 } , { timestamps: true });
 

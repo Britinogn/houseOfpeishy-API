@@ -1,11 +1,11 @@
 const Appointment = require('../models/Appointment')
 const Service = require('../models/Service')
-const { sendNotification , smsTemplates } = require('../utils/sendSMS');
+const { sendEmail , emailTemplates } = require('../utils/emailService');
 
-
+// sendEmail
 exports.createAppointment = async (req, res) => {
     try {
-        const { serviceId, appointmentDate, appointmentTime, customerName, customerEmail, customerPhone, notes } = req.body;
+        const { serviceId, appointmentDate, appointmentTime, customerName, customerEmail, customerPhone, notes , emailSent  } = req.body;
 
         if (!serviceId || !appointmentDate || !appointmentTime || !customerName || !customerEmail || !customerPhone) {
             return res.status(400).json({ message: 'All required fields must be provided' });
@@ -37,11 +37,11 @@ exports.createAppointment = async (req, res) => {
 
         // --- Send booking SMS ---
         const formattedDate = new Date(appointmentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        const bookingMessage = smsTemplates.booking(customerName, service.name, formattedDate, appointmentTime);
+        const bookingMessage = emailTemplates.booking(customerName, service.name, formattedDate, appointmentTime);
 
-        const notificationResult = await sendNotification(customerPhone, bookingMessage, 'whatsapp');
+        const notificationResult = await sendEmail(customerPhone, bookingMessage, 'sms');
         if (notificationResult.success) {
-            appointment.smsSent.booking = true;
+            appointment.emailSent.booking = true;
             await appointment.save();
         }
 
@@ -50,7 +50,7 @@ exports.createAppointment = async (req, res) => {
         res.status(201).json({
             message: 'Appointment created successfully',
             appointment,
-            smsSent: notificationResult.success
+            emailSent: notificationResult.success
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -148,82 +148,74 @@ exports.getAllAppointments = async(req, res) => {
 }
 
 
-exports.updateStatus = async(req, res) => {
-    try {
-        const { id } = req.params;
-        const { status } = req.body;
-        
-        // Validate status
-        const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
-        if (!status || !validStatuses.includes(status)) {
-            return res.status(400).json({ 
-                message: 'Invalid status. Must be: pending, confirmed, completed, or cancelled' 
-            });
-        }
-        
-        const appointment = await Appointment.findById(id);
-        if (!appointment) {
-            return res.status(404).json({ message: 'Appointment not found' });
-        }
+exports.updateStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
 
-        const oldStatus = appointment.status;
-        appointment.status = status;
-
-        // Send SMS based on status change
-        const formattedDate = new Date(appointment.appointmentDate).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric'
-        });
-        
-        let smsResult = { success: false };
-        
-        if (status === 'confirmed' && oldStatus === 'pending') {
-            const message = smsTemplates.confirmation(
-                appointment.customerName,
-                appointment.serviceId.name,
-                formattedDate,
-                appointment.appointmentTime
-            );
-            smsResult = await sendSMS(appointment.customerPhone, message);
-            
-            if (smsResult.success) {
-                appointment.smsSent.confirmation = true;
-            }
-        }
-        
-        if (status === 'cancelled') {
-            const message = smsTemplates.cancellation(
-                appointment.customerName,
-                appointment.serviceId.name,
-                formattedDate,
-                appointment.appointmentTime
-            );
-            smsResult = await sendSMS(appointment.customerPhone, message);
-        }
-        
-        await appointment.save();
-        
-        res.json({
-            message: `Appointment status updated to ${status}`,
-            appointment,
-            smsSent: smsResult.success
-        });
-        
-        
-        appointment.status = status;
-        await appointment.save();
-        
-        await appointment.populate('serviceId', 'name price category duration');
-        
-        res.json({
-            message: `Appointment status updated to ${status}`,
-            appointment
-        });
-        
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    //  Validate status
+    const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        message: 'Invalid status. Must be: pending, confirmed, completed, or cancelled'
+      });
     }
-}
+
+    //  Find appointment and populate service details
+    const appointment = await Appointment.findById(id).populate('serviceId', 'name');
+    if (!appointment) {
+      return res.status(404).json({ message: 'Appointment not found' });
+    }
+
+    const oldStatus = appointment.status;
+    appointment.status = status;
+
+    //  Prepare SMS message
+    const formattedDate = new Date(appointment.appointmentDate).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    });
+
+    let smsResult = { success: false };
+
+    //  Send SMS based on status change
+    if (status === 'confirmed' && oldStatus === 'pending') {
+      const message = emailTemplates.confirmation(
+        appointment.customerName,
+        appointment.serviceId.name,
+        formattedDate,
+        appointment.appointmentTime
+      );
+      smsResult = await sendEmail(appointment.customerPhone, message, 'sms');
+      if (smsResult.success) appointment.emailSent.confirmation = true;
+    }
+
+    if (status === 'cancelled') {
+      const message = emailTemplates.cancellation(
+        appointment.customerName,
+        appointment.serviceId.name,
+        formattedDate,
+        appointment.appointmentTime
+      );
+      smsResult = await sendEmail(appointment.customerPhone, message, 'sms');
+      if (smsResult.success) appointment.emailSent.cancellation = true;
+    }
+
+    //  Save updates
+    await appointment.save();
+
+    //  Response
+    res.json({
+      message: `Appointment status updated to ${status}`,
+      appointment,
+      emailSent: smsResult.success
+    });
+  } catch (error) {
+    console.error('❌ Error updating appointment status:', error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
 
 exports.sendReminder = async(req, res) => {
@@ -244,23 +236,23 @@ exports.sendReminder = async(req, res) => {
             day: 'numeric'
         });
         
-        const message = smsTemplates.reminder(
+        const message = emailTemplates.reminder(
             appointment.customerName,
             appointment.serviceId.name,
             formattedDate,
             appointment.appointmentTime
         );
         
-        const smsResult = await sendSMS(appointment.customerPhone, message);
+        const smsResult = await sendEmail(appointment.customerPhone, message);
         
         if (smsResult.success) {
-            appointment.smsSent.reminder = true;
+            appointment.emailSent.reminder = true;
             await appointment.save();
         }
         
         res.json({
             message: 'Reminder sent successfully',
-            smsSent: smsResult.success
+            emailSent: smsResult.success
         });
         
     } catch (error) {
