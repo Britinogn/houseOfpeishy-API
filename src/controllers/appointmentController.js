@@ -197,26 +197,38 @@ exports.updateStatus = async (req, res) => {
     let emailResult = { success: false };
 
     //  Send SMS based on status change
-    if (status === 'confirmed' && oldStatus === 'pending') {
+    if (status === 'confirmed') {
       const message = emailTemplates.confirmation(
         appointment.customerName,
         appointment.serviceId.name,
         formattedDate,
         appointment.appointmentTime
       );
-      emailResult = await sendEmail(appointment.customerEmail, message, 'email');
+
+        emailResult = await sendEmail(
+            appointment.customerEmail, 
+            'Your Appointment Booking has been confirmed ',
+            message
+        );
+
       if (emailResult.success) appointment.emailSent.confirmation = true;
     }
 
     if (status === 'cancelled') {
-      const message = emailTemplates.cancellation(
-        appointment.customerName,
-        appointment.serviceId.name,
-        formattedDate,
-        appointment.appointmentTime
-      );
-      emailResult = await sendEmail(appointment.customerEmail, message, 'email');
-      if (emailResult.success) appointment.emailSent.cancellation = true;
+        const message = emailTemplates.cancellation(
+            appointment.customerName,
+            appointment.serviceId.name,
+            formattedDate,
+            appointment.appointmentTime
+        );
+
+        emailResult = await sendEmail(
+            appointment.customerEmail, 
+            'Your Appointment Booking has been cancelled ',
+            message
+        );
+      
+        if (emailResult.success) appointment.emailSent.cancellation = true;
     }
 
     //  Save updates
