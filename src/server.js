@@ -14,7 +14,6 @@ const appointmentRoutes = require('./routes/appointmentRoute');
 const paymentRoutes = require('./routes/paymentRoute');
 const galleryRoutes = require('./routes/galleryRoute');
 const availabilityRoutes = require('./routes/availabilityRoute');
-
 const adminDashboardRoute = require('./routes/adminDashboardRoute')
 
 //connectDB 
@@ -23,7 +22,11 @@ connectDB();
 //middleware
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors()); 
+app.use(cors({
+  origin: ['https://houseofpeishy.vercel.app', 'http://localhost:5173'],
+  credentials: true,
+}));
+
 app.use(express.urlencoded({ extended: true })); 
 
 
