@@ -27,6 +27,10 @@ app.use(cors({
   credentials: true,
 }));
 
+//app.use((req, res, next) => { req.setTimeout(30000); next(); });
+
+
+
 app.use(express.urlencoded({ extended: true })); 
 
 
@@ -46,6 +50,14 @@ app.use('/api/admin', adminDashboardRoute );
 app.get('/', (req, res) => {
     res.json({ message: 'House of Peishy API is running!' });
 });
+
+
+
+app.get('/ping', (req, res) => {
+  res.status(200).send('Server is awake and running 🚀');
+});
+
+
 
 // 404 handler
 app.use((req, res) => {
