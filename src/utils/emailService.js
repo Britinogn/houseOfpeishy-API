@@ -129,5 +129,5 @@ const emailTemplates = {
 };
 
 // ✅ Export for reuse or standalone test
-module.exports = { sendEmail, emailTemplates, transporter };
+module.exports = { sendEmail, emailTemplates, resend };
 
