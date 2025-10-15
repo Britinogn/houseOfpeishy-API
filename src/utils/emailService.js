@@ -1,6 +1,8 @@
 //require("dotenv").config();
-const nodemailer = require("nodemailer");
-const { ResendTransport } = require('resend');
+//const nodemailer = require("nodemailer");
+const { Resend } = require('resend');
+
+/** 
 
 //  Create transporter using cPanel SMTP
 const transporter = nodemailer.createTransport({
@@ -9,24 +11,41 @@ const transporter = nodemailer.createTransport({
     // stored in .env
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
-    apiKey: process.env.RESEND_API_KEY, 
   },
 
-});
+}); */
+
+const resend = new Resend(process.env.RESEND_API_KEY); 
+
 
 //  Helper function to send email
-const sendEmail = async (to, subject, message) => {
+const sendEmail = async (to, subject, html) => {
   try {
-    const info = await transporter.sendMail({
-      from: `"House of Peishy" <${process.env.EMAIL_USER}>`, // from .env
-      to, // recipient
+    // const info = await transporter.sendMail({
+    //   from: `"House of Peishy" <${process.env.EMAIL_USER}>`, // from .env
+    //   to, // recipient
+    //   subject,
+    //   text: message,
+    //   html: `<p>${message}</p>`
+    // });
+
+    const { data, error } = await resend.emails.send({
+      from: `"House of Peishy" <${process.env.EMAIL_USER}>`,  // Verified sender
+      to: [to],  // Resend expects array
       subject,
-      text: message,
-      html: `<p>${message}</p>`
+      html,  // Use your template HTML here
+      // text: 'Plain text fallback...'  // Optional: Add if needed for non-HTML clients
     });
 
-    console.log(`✅ Email sent successfully: ${info.messageId}`);
-    return { success: true, data: info };
+    if (error) {
+      console.error("❌ Email sending failed:", error.message);
+      return { success: false, error };
+    }
+
+
+    console.log(`✅ Email sent successfully: ${data.id}`);
+    return { success: true, data };
+
   } catch (error) {
     console.error("❌ Email sending failed:", error.message);
     return { success: false, error };
