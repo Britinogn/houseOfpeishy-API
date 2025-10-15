@@ -57,7 +57,9 @@ app.get('/ping', (req, res) => {
   res.status(200).send('Server is awake and running 🚀');
 });
 
-
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'Server is awake and running 🚀' })
+})
 
 // 404 handler
 app.use((req, res) => {
