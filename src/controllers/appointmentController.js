@@ -24,7 +24,8 @@ exports.createAppointment = async (req, res) => {
 
         if (existingAppointment) return res.status(400).json({ message: 'Time slot already booked' });
 
-        const appointment = new Appointment({
+        // Create appointment data but DON'T save yet
+        const appointmentData = {
             serviceId,
             appointmentDate,
             appointmentTime,
@@ -32,43 +33,48 @@ exports.createAppointment = async (req, res) => {
             customerEmail,
             customerPhone,
             notes
-        });
+        };
 
-        try {
-            const message = emailTemplates.booking(
-                appointment.customerName,
-                appointment.serviceId.name,
-                new Date(appointment.appointmentDate).toDateString(),
-                appointment.appointmentTime
-            );
+        // TRY TO SEND EMAIL FIRST
+        const message = emailTemplates.booking(
+            customerName,
+            service.name,
+            new Date(appointmentDate).toDateString(),
+            appointmentTime
+        );
 
-            const emailResult = await sendEmail(
-                appointment.customerEmail,
-                "Your Appointment Booking Confirmation 💅",
-                message
-            );
+        const emailResult = await sendEmail(
+            customerEmail,
+            "Your Appointment Booking Confirmation 💅",
+            message
+        );
 
-            // Update appointment if email succeeded
-            if (emailResult.success) {
-                appointment.emailSent.booking = true;
-                await appointment.save();
-                console.log("✅ Booking email sent successfully");
-            } else {
-                console.warn("⚠️ Failed to send booking email:", emailResult.error);
-            }
-        } catch (err) {
-            console.error("❌ Error sending booking email:", err);
+        // If email FAILS, don't save appointment
+        if (!emailResult.success) {
+            console.error("❌ Email failed, appointment NOT saved");
+            return res.status(500).json({ 
+                message: 'Unable to send confirmation email. Please try again or contact us directly.',
+                error: 'Email service temporarily unavailable'
+            });
         }
 
+        // Email SUCCEEDED, now save the appointment
+        const appointment = new Appointment({
+            ...appointmentData,
+            emailSent: { booking: true }
+        });
 
         await appointment.save();
         await appointment.populate("serviceId", "name price category duration");
 
+        console.log("✅ Email sent and appointment saved successfully");
+
         res.status(201).json({
             message: "Appointment created successfully",
             appointment,
-            emailSent: appointment.emailSent.booking,
+            emailSent: true,
         });
+
     } catch (error) {
         console.error("❌ Appointment creation error:", error);
         res.status(500).json({ message: error.message });
