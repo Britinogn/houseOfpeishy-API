@@ -12,14 +12,14 @@ const transporter = nodemailer.createTransport({
 });
 
 //  Helper function to send email
-const sendEmail = async (to, subject, html) => { 
+const sendEmail = async (to, subject, message) => {
   try {
     const info = await transporter.sendMail({
-      from: `"House of Peishy" <${process.env.EMAIL_USER}>`,
-      to,
+      from: `"House of Peishy" <${process.env.EMAIL_USER}>`, // from .env
+      to, // recipient
       subject,
-      html,  // Use the HTML directly
-      // text: message  // Optional: add plain text version if needed
+      text: message,
+      html: `<p>${message}</p>`
     });
 
     console.log(`✅ Email sent successfully: ${info.messageId}`);
@@ -29,6 +29,7 @@ const sendEmail = async (to, subject, html) => {
     return { success: false, error };
   }
 };
+
 // ✅ Email Templates
 const emailTemplates = {
   booking: (customerName, serviceId, date) => `
