@@ -2,15 +2,21 @@
 const nodemailer = require("nodemailer");
 
 //  Create transporter using cPanel SMTP
+// In your email file (where you have nodemailer)
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER, // stored in .env
-    pass: process.env.EMAIL_PASS // stored in .env
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
-
+  tls: { rejectUnauthorized: false },
+},
+{
+  // This is the key part – add timeouts
+  connectionTimeout: 10000,   // 10 seconds to connect
+  greetingTimeout: 10000,
+  socketTimeout: 15000,       // 15 seconds max to send
 });
-
 //  Helper function to send email
 const sendEmail = async (to, subject, message) => {
   try {
